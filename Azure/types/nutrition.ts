@@ -1,17 +1,13 @@
 export interface NutritionSummary {
-  totalFoods: number;
-  totalDiets: number;
-  totalCuisines: number;
+  totalRecipes: number;
   averageCalories: number;
   averageProtein: number;
   averageCarbohydrates: number;
   averageFat: number;
-  highestCalories: number;
-  highestProtein: number;
 }
 
-export interface DietNutrition {
-  diet: string;
+export interface DietAnalysis {
+  dietType: string;
   calories: number;
   protein: number;
   carbohydrates: number;
@@ -19,65 +15,63 @@ export interface DietNutrition {
 }
 
 export interface ScatterPoint {
-  food: string;
-  diet: string;
-  cuisine: string;
-  x: number;
-  y: number;
+  food?: string;
+  dietType?: string;
+  protein: number;
+  calories: number;
 }
 
-export interface HeatmapPoint {
-  x: string;
-  y: string;
-  value: number;
+export interface HeatmapItem {
+  nutrient: string;
+  protein?: number;
+  carbohydrates?: number;
+  fat?: number;
+  calories?: number;
 }
 
-export interface CaloriesPiePoint {
+export interface CaloriesPieItem {
   name: string;
   value: number;
 }
 
-export interface CuisineNutrition {
-  cuisine: string;
-  protein: number;
-  carbohydrates: number;
-  fat: number;
-  calories: number;
-}
-
-export interface TopRecipe {
-  food: string;
-  diet_type: string;
-  cuisine: string;
-  protein: number;
-  carbohydrates: number;
-  fat: number;
-  calories: number;
-}
-
 export interface NutritionAnalysis {
   summary: NutritionSummary;
-  byDiet: DietNutrition[];
+  byDiet: DietAnalysis[];
   scatter: ScatterPoint[];
-  heatmap: HeatmapPoint[];
-  caloriesPie: CaloriesPiePoint[];
-  byCuisine: CuisineNutrition[];
-  topRecipes: TopRecipe[];
-  table: Record<string, string | number | null>[];
-  metadata: {
-    rows: number;
-    columns: string[];
-    nutrients: string[];
-    caloriesAreEstimated: boolean;
-    calorieFormula: string;
-  };
+  heatmap: HeatmapItem[];
+  caloriesPie: CaloriesPieItem[];
 }
 
 export interface NutritionApiResponse {
   success: boolean;
   message?: string;
   generatedAt?: string;
-  data?: NutritionAnalysis;
-  error?: string;
-  details?: string;
+  data: NutritionAnalysis;
+}
+
+export interface Recipe {
+  id: string;
+  recipe_name: string;
+  diet_type: string;
+  cuisine: string;
+  protein: number;
+  carbohydrates: number;
+  fat: number;
+  dataset_version?: string;
+}
+
+export interface RecipesResponse {
+  success: boolean;
+  page: number;
+  pageSize: number;
+  totalItems: number;
+  totalPages: number;
+  items: Recipe[];
+}
+
+export interface RecipeQueryParams {
+  diet?: string;
+  q?: string;
+  page?: number;
+  pageSize?: number;
 }

@@ -1,66 +1,57 @@
-import type {
-  NutritionAnalysis,
-  NutritionApiResponse,
+import {
+  RecipeQueryParams,
+  RecipesResponse,
 } from "@/types/nutrition";
 
-export type NutritionApiData = NutritionAnalysis;
-export type SuccessfulNutritionResponse = NutritionApiResponse & {
-  success: true;
-  data: NutritionAnalysis;
-};
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_BASE_URL ||
+  "http://localhost:7071/api";
 
-const API_URL = process.env.NEXT_PUBLIC_NUTRITION_API_URL;
 
-export async function getNutritionAnalysis(
-  food?: string,
-  signal?: AbortSignal
-): Promise<SuccessfulNutritionResponse> {
-  if (!API_URL) {
-    throw new Error(
-      "NEXT_PUBLIC_NUTRITION_API_URL is missing from .env.local"
-    );
+export async function getRecipes({
+  diet = "",
+  q = "",
+  page = 1,
+  pageSize = 10,
+}: RecipeQueryParams = {}): Promise<RecipesResponse> {
+  const params = new URLSearchParams();
+
+  if (diet.trim()) {
+    params.set("diet", diet.trim());
   }
 
-  const url = new URL(API_URL);
-
-  if (food?.trim()) {
-    url.searchParams.set("food", food.trim());
+  if (q.trim()) {
+    params.set("q", q.trim());
   }
 
-  const response = await fetch(url.toString(), {
+  params.set("page", String(page));
+  params.set("pageSize", String(pageSize));
+
+  const url = `${API_BASE_URL}/recipes?${params.toString()}`;
+
+  const response = await fetch(url, {
     method: "GET",
     headers: {
       Accept: "application/json",
     },
     cache: "no-store",
-    signal,
   });
 
-  let result: NutritionApiResponse;
-
-  try {
-    result = (await response.json()) as NutritionApiResponse;
-  } catch {
-    throw new Error(
-      `The API returned an invalid response. HTTP ${response.status}`
-    );
-  }
-
   if (!response.ok) {
-    throw new Error(
-      result.details ||
-        result.error ||
-        `API request failed with HTTP ${response.status}`
-    );
+    let message = "Failed to fetch recipes.";
+
+    try {
+      const errorData = await response.json();
+
+      if (errorData?.error) {
+        message = errorData.error;
+      }
+    } catch {
+      // Keep default message.
+    }
+
+    throw new Error(message);
   }
 
-  if (!result.success) {
-    throw new Error(result.error || "Nutrition analysis failed.");
-  }
-
-  if (!result.data) {
-    throw new Error("The API response did not include nutrition data.");
-  }
-
-  return result as SuccessfulNutritionResponse;
+  return response.json();
 }
