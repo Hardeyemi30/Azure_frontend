@@ -15,7 +15,7 @@ import {
   registerUser,
 } from "@/services/authApi";
 
-import {
+import type {
   LoginRequest,
   RegisterRequest,
   User,
@@ -54,26 +54,88 @@ interface AuthProviderProps {
 export function AuthProvider({
   children,
 }: AuthProviderProps) {
-  const [user, setUser] = useState<User | null>(() => {
-    try {
-      if (typeof window === "undefined") return null;
-      const storedUser = localStorage.getItem("user");
-      return storedUser ? (JSON.parse(storedUser) as User) : null;
-    } catch {
-      return null;
-    }
-  });
+  // Important:
+  // Always start the same on server and client.
+  const [user, setUser] =
+    useState<User | null>(null);
 
-  const [token, setToken] = useState<string | null>(() => {
-    try {
-      if (typeof window === "undefined") return null;
-      return localStorage.getItem("accessToken");
-    } catch {
-      return null;
-    }
-  });
+  const [token, setToken] =
+    useState<string | null>(null);
 
-  const [loading, setLoading] = useState(false);
+  // true while restoring browser session
+  const [loading, setLoading] =
+    useState(true);
+
+  /* =====================================
+     RESTORE SESSION
+  ===================================== */
+
+  useEffect(() => {
+    async function restoreSession() {
+      await Promise.resolve();
+
+      try {
+        const storedToken =
+          localStorage.getItem(
+            "accessToken"
+          );
+
+        const storedUser =
+          localStorage.getItem(
+            "user"
+          );
+
+        if (
+          storedToken &&
+          storedUser
+        ) {
+          const parsedUser =
+            JSON.parse(
+              storedUser
+            ) as User;
+
+          setToken(storedToken);
+          setUser(parsedUser);
+        } else {
+          // Prevent partial/broken sessions
+          localStorage.removeItem(
+            "accessToken"
+          );
+
+          localStorage.removeItem(
+            "user"
+          );
+
+          setToken(null);
+          setUser(null);
+        }
+      } catch (error) {
+        console.error(
+          "Unable to restore authentication session:",
+          error
+        );
+
+        localStorage.removeItem(
+          "accessToken"
+        );
+
+        localStorage.removeItem(
+          "user"
+        );
+
+        setToken(null);
+        setUser(null);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    void restoreSession();
+  }, []);
+
+  /* =====================================
+     LOGOUT
+  ===================================== */
 
   const logout = useCallback(() => {
     localStorage.removeItem(
@@ -88,12 +150,14 @@ export function AuthProvider({
     setUser(null);
   }, []);
 
-  // Session is restored synchronously via useState initializers above
+  /* =====================================
+     HANDLE 401 / UNAUTHORIZED
+  ===================================== */
 
   useEffect(() => {
-    const handleUnauthorized = () => {
+    function handleUnauthorized() {
       logout();
-    };
+    }
 
     window.addEventListener(
       "auth:unauthorized",
@@ -108,34 +172,53 @@ export function AuthProvider({
     };
   }, [logout]);
 
-  function saveSession(
-    newToken: string,
-    newUser: User
-  ) {
-    localStorage.setItem(
-      "accessToken",
-      newToken
+  /* =====================================
+     SAVE SESSION
+  ===================================== */
+
+  const saveSession =
+    useCallback(
+      (
+        newToken: string,
+        newUser: User
+      ) => {
+        localStorage.setItem(
+          "accessToken",
+          newToken
+        );
+
+        localStorage.setItem(
+          "user",
+          JSON.stringify(newUser)
+        );
+
+        setToken(newToken);
+        setUser(newUser);
+      },
+      []
     );
 
-    localStorage.setItem(
-      "user",
-      JSON.stringify(newUser)
-    );
-
-    setToken(newToken);
-    setUser(newUser);
-  }
+  /* =====================================
+     EMAIL / PASSWORD LOGIN
+  ===================================== */
 
   async function login(
     credentials: LoginRequest
-  ) {
+  ): Promise<void> {
     const response =
-      await loginUser(credentials);
+      await loginUser(
+        credentials
+      );
 
     if (
       !response.token ||
       !response.user
     ) {
+      console.error(
+        "Invalid login response:",
+        response
+      );
+
       throw new Error(
         "The server did not return a valid login session."
       );
@@ -147,9 +230,13 @@ export function AuthProvider({
     );
   }
 
+  /* =====================================
+     REGISTER
+  ===================================== */
+
   async function register(
     registration: RegisterRequest
-  ) {
+  ): Promise<void> {
     const response =
       await registerUser(
         registration
@@ -159,6 +246,11 @@ export function AuthProvider({
       !response.token ||
       !response.user
     ) {
+      console.error(
+        "Invalid registration response:",
+        response
+      );
+
       throw new Error(
         "Registration succeeded but no session was returned."
       );
@@ -170,9 +262,13 @@ export function AuthProvider({
     );
   }
 
+  /* =====================================
+     GOOGLE LOGIN
+  ===================================== */
+
   async function googleLogin(
     credential: string
-  ) {
+  ): Promise<void> {
     const response =
       await loginWithGoogle({
         credential,
@@ -182,6 +278,11 @@ export function AuthProvider({
       !response.token ||
       !response.user
     ) {
+      console.error(
+        "Invalid Google login response:",
+        response
+      );
+
       throw new Error(
         "Google authentication failed."
       );
@@ -193,14 +294,23 @@ export function AuthProvider({
     );
   }
 
+  /* =====================================
+     PROVIDER
+  ===================================== */
+
   return (
     <AuthContext.Provider
       value={{
         user,
         token,
         loading,
+
         isAuthenticated:
-          Boolean(user && token),
+          Boolean(
+            user &&
+              token
+          ),
+
         login,
         register,
         googleLogin,
@@ -212,9 +322,15 @@ export function AuthProvider({
   );
 }
 
+/* =====================================
+   AUTH HOOK
+===================================== */
+
 export function useAuth() {
   const context =
-    useContext(AuthContext);
+    useContext(
+      AuthContext
+    );
 
   if (!context) {
     throw new Error(

@@ -9,10 +9,10 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import type { DietNutrition } from "@/types/nutrition";
+import type { DietAnalysis } from "@/types/nutrition";
 
 interface CaloriesBarProps {
-  data: DietNutrition[];
+  data: DietAnalysis[];
 }
 
 export default function CaloriesBar({

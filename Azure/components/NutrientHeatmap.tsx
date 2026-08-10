@@ -1,10 +1,10 @@
 "use client";
 
 import { Fragment } from "react";
-import type { HeatmapPoint } from "@/types/nutrition";
+import type { HeatmapItem } from "@/types/nutrition";
 
 interface NutrientHeatmapProps {
-  data: HeatmapPoint[];
+  data: HeatmapItem[];
 }
 
 export default function NutrientHeatmap({

@@ -7,10 +7,10 @@ import {
   ResponsiveContainer,
   Tooltip,
 } from "recharts";
-import type { CaloriesPiePoint } from "@/types/nutrition";
+import type { CaloriesPieItem } from "@/types/nutrition";
 
 interface CaloriesPieProps {
-  data: CaloriesPiePoint[];
+  data: CaloriesPieItem[];
 }
 
 const COLORS = [

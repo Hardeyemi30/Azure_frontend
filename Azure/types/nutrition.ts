@@ -7,7 +7,7 @@ export interface NutritionSummary {
 }
 
 export interface DietAnalysis {
-  dietType: string;
+  diet: string;
   calories: number;
   protein: number;
   carbohydrates: number;
@@ -15,18 +15,17 @@ export interface DietAnalysis {
 }
 
 export interface ScatterPoint {
-  food?: string;
-  dietType?: string;
-  protein: number;
-  calories: number;
+  food: string;
+  diet_type: string;
+  cuisine: string;
+  x: number;
+  y: number;
 }
 
 export interface HeatmapItem {
-  nutrient: string;
-  protein?: number;
-  carbohydrates?: number;
-  fat?: number;
-  calories?: number;
+  x: string;
+  y: string;
+  value: number;
 }
 
 export interface CaloriesPieItem {
