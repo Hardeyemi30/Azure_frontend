@@ -79,7 +79,6 @@ export function AuthProvider({
           localStorage.getItem(
             "accessToken"
           );
-
         const storedUser =
           localStorage.getItem(
             "user"
