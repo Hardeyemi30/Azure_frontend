@@ -4,7 +4,6 @@ import {
   LoginRequest,
   RegisterRequest,
 } from "@/types/auth";
-
 const API_URL =
   process.env.NEXT_PUBLIC_API_URL || "http://localhost:7071/api";
 
