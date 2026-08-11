@@ -69,7 +69,6 @@ export function AuthProvider({
   /* =====================================
      RESTORE SESSION
   ===================================== */
-
   useEffect(() => {
     async function restoreSession() {
       await Promise.resolve();
