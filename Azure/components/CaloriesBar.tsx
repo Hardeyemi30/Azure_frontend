@@ -10,7 +10,6 @@ import {
   YAxis,
 } from "recharts";
 import type { DietAnalysis } from "@/types/nutrition";
-
 interface CaloriesBarProps {
   data: DietAnalysis[];
 }
